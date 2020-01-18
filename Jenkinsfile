@@ -16,7 +16,7 @@
 def createNamespace (namespace) {
     echo "Creating namespace ${namespace} if needed"
 
-    sh "[ ! -z \"\$(kubectl get ns ${namespace} -o name 2>/dev/null)\" ] || kubectl create ns ${namespace}"
+    sh "[ ! -z \"\$(sudo kubectl get ns ${namespace} -o name 2>/dev/null)\" ] || sudo kubectl create ns ${namespace}"
 }
 
 /*
@@ -27,9 +27,9 @@ def helmInstall (namespace, release) {
 
     script {
         release = "${release}-${namespace}"
-        sh "helm repo add helm ${HELM_REPO}; helm repo update"
+        sh "sudo helm repo add helm ${HELM_REPO}; sudo helm repo update"
         sh """
-            helm upgrade --install --namespace ${namespace} ${release} \
+            sudo helm upgrade --install --namespace ${namespace} ${release} \
                 --set imagePullSecrets=${IMG_PULL_SECRET} \
                 --set image.repository=${DOCKER_REG}/${IMAGE_NAME},image.tag=${DOCKER_TAG} helm/acme
         """
@@ -45,7 +45,7 @@ def helmDelete (namespace, release) {
 
     script {
         release = "${release}-${namespace}"
-        sh "[ -z \"\$(helm ls --short ${release} 2>/dev/null)\" ] || helm delete --purge ${release}"
+        sh "[ -z \"\$(sudo helm ls --short ${release} 2>/dev/null)\" ] || sudo helm delete --purge ${release}"
     }
 }
 
@@ -82,7 +82,7 @@ def curlTest (namespace, out) {
         // Get deployment's service IP
         def svc_ip = sh (
                 returnStdout: true,
-                script: "kubectl get svc -n ${namespace} | grep ${ID} | awk '{print \$3}'"
+                script: "sudo kubectl get svc -n ${namespace} | grep ${ID} | awk '{print \$3}'"
         )
 
         if (svc_ip.equals('')) {
@@ -144,16 +144,11 @@ pipeline {
         ////////// Step 1 //////////
         stage('Git clone and setup') {
             steps {
-                echo "Check out acme code"
-                git branch: "master",
-                        credentialsId: 'kiranxyz',
-                        url: 'https://github.com/kiranxyz/jenkins-pipeline-kubernetes.git'
-
                 // Validate kubectl
-                sh "kubectl cluster-info"
+                sh "sudo kubectl cluster-info"
 
                 // Init helm client
-                sh "helm init"
+                sh "sudo helm init"
 
                 // Make sure parameters file exists
                 script {
@@ -186,10 +181,10 @@ pipeline {
                 echo "Running tests"
 
                 // Kill container in case there is a leftover
-                sh "[ -z \"\$(docker ps -a | grep ${ID} 2>/dev/null)\" ] || docker rm -f ${ID}"
+                sh "[ -z \"\$(sudo docker ps -a | grep ${ID} 2>/dev/null)\" ] || sudo docker rm -f ${ID}"
 
                 echo "Starting ${IMAGE_NAME} container"
-                sh "docker run --detach --name ${ID} --rm --publish ${TEST_LOCAL_PORT}:80 ${DOCKER_REG}/${IMAGE_NAME}:${DOCKER_TAG}"
+                sh "sudo docker run --detach --name ${ID} --rm --publish ${TEST_LOCAL_PORT}:80 ${DOCKER_REG}/${IMAGE_NAME}:${DOCKER_TAG}"
 
                 script {
                     host_ip = sh(returnStdout: true, script: '/sbin/ip route | awk \'/default/ { print $3 ":${TEST_LOCAL_PORT}" }\'')
