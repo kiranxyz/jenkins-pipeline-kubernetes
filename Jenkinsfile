@@ -175,7 +175,7 @@ pipeline {
                 sh "sudo docker pull mongo:latest"
 
                 script {
-                    host_ip = sh(returnStdout: true, script: '/sbin/ip route | awk \'/default/ { print $3 ":${TEST_LOCAL_PORT}" }\'')
+                    host_ip = sh(returnStdout: true, script: '/sbin/ip route | awk \'/default/ { print $3 ":27017" }\'')
                 }
             }
         }
