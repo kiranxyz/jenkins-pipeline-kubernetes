@@ -27,11 +27,11 @@ def helmInstall (namespace, release) {
 
     script {
         release = "${release}-${namespace}"
-        sh "sudo helm repo add helm ${HELM_REPO}; sudo helm repo update"
+        sh "sudo helm repo add helm https://artifactory.my/artifactory/helm; sudo helm repo update"
         sh """
             sudo helm upgrade --install --namespace ${namespace} ${release} \
                 --set imagePullSecrets=${IMG_PULL_SECRET} \
-                --set image.repository=${DOCKER_REG}/${IMAGE_NAME},image.tag=${DOCKER_TAG} helm/acme
+                --set image.repository=docker-artifactory.my/${IMAGE_NAME},image.tag=DEV helm/acme
         """
         sh "sleep 5"
     }
@@ -147,24 +147,14 @@ pipeline {
                 sh "sudo kubectl cluster-info"
 
                 // Init helm client
-                sh "sudo helm init"
+                sh "sudo helm init"                
+// Load Docker registry and Helm repository configurations from file
 
-                // Make sure parameters file exists
-                script {
-                    if (! fileExists("${PARAMETERS_FILE}")) {
-                        echo "ERROR: ${PARAMETERS_FILE} is missing!"
-                    }
-                }
-
-                // Load Docker registry and Helm repository configurations from file
-
-                echo "DOCKER_REG is ${DOCKER_REG}"
-                echo "HELM_REPO  is ${HELM_REPO}"
-
+                
                 // Define a unique name for the tests container and helm release
                 script {
                     branch = GIT_BRANCH.replaceAll('/', '-').replaceAll('\\*', '-')
-                    ID = "${IMAGE_NAME}-${DOCKER_TAG}-${branch}"
+                    ID = "${IMAGE_NAME}-DEV-${branch}"
 
                     echo "Global ID set to ${ID}"
                 }
@@ -182,7 +172,7 @@ pipeline {
                 sh "[ -z \"\$(sudo docker ps -a | grep ${ID} 2>/dev/null)\" ] || sudo docker rm -f ${ID}"
 
                 echo "Starting ${IMAGE_NAME} container"
-                sh "sudo docker run --detach --name ${ID} --rm --publish ${TEST_LOCAL_PORT}:80 ${DOCKER_REG}/${IMAGE_NAME}:${DOCKER_TAG}"
+                sh "sudo docker run --detach --name ${ID} --rm --publish ${TEST_LOCAL_PORT}:80 docker-artifactory.my/${IMAGE_NAME}:DEV"
 
                 script {
                     host_ip = sh(returnStdout: true, script: '/sbin/ip route | awk \'/default/ { print $3 ":${TEST_LOCAL_PORT}" }\'')
@@ -274,7 +264,7 @@ pipeline {
                 script {
                     namespace = 'staging'
 
-                    echo "Deploying application ${IMAGE_NAME}:${DOCKER_TAG} to ${namespace} namespace"
+                    echo "Deploying application ${IMAGE_NAME}:DEV to ${namespace} namespace"
                     createNamespace (namespace)
 
                     // Remove release if exists
@@ -352,7 +342,7 @@ pipeline {
                     DEPLOY_PROD = true
                     namespace = 'production'
 
-                    echo "Deploying application ${IMAGE_NAME}:${DOCKER_TAG} to ${namespace} namespace"
+                    echo "Deploying application ${IMAGE_NAME}:DEV to ${namespace} namespace"
                     createNamespace (namespace)
 
                     // Deploy with helm
