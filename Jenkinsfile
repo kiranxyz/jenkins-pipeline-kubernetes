@@ -112,7 +112,6 @@ pipeline {
         IMAGE_NAME = 'acme'
         TEST_LOCAL_PORT = 8817
         DEPLOY_PROD = false
-        PARAMETERS_FILE = "${JENKINS_HOME}/parameters.groovy"
     }
 
     parameters {
@@ -158,7 +157,6 @@ pipeline {
                 }
 
                 // Load Docker registry and Helm repository configurations from file
-                load "${JENKINS_HOME}/parameters.groovy"
 
                 echo "DOCKER_REG is ${DOCKER_REG}"
                 echo "HELM_REPO  is ${HELM_REPO}"
