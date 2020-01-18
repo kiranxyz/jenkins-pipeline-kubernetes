@@ -29,9 +29,7 @@ def helmInstall (namespace, release) {
         release = "${release}-${namespace}"
         sh "sudo helm repo add stable https://kubernetes-charts.storage.googleapis.com/; sudo helm repo update"
         sh """
-            sudo helm upgrade --install --namespace ${namespace} ${release} \
-                --set imagePullSecrets=${IMG_PULL_SECRET} \
-                --set image.repository=docker-artifactory.my/${IMAGE_NAME},image.tag=DEV helm/acme
+            sudo helm upgrade --install --namespace ${namespace} ${release} 
         """
         sh "sleep 5"
     }
