@@ -179,36 +179,7 @@ pipeline {
                 }
             }
         }
-
-        // Run the 3 tests on the currently running ACME Docker container
-        stage('Local tests') {
-            parallel {
-                stage('Curl http_code') {
-                    steps {
-                        curlRun ("http://${host_ip}", 'http_code')
-                    }
-                }
-                stage('Curl total_time') {
-                    steps {
-                        curlRun ("http://${host_ip}", 'total_time')
-                    }
-                }
-                stage('Curl size_download') {
-                    steps {
-                        curlRun ("http://${host_ip}", 'size_download')
-                    }
-                }
-            }
-        }
-
         ////////// Step 3 //////////
-        stage('Publish Docker and Helm') {
-            steps {
-
-               sh " echo 'publishing docker image' "
-            }
-        }
-
         ////////// Step 4 //////////
         stage('Deploy to dev') {
             steps {
@@ -227,28 +198,6 @@ pipeline {
                 }
             }
         }
-
-        // Run the 3 tests on the deployed Kubernetes pod and service
-        stage('Dev tests') {
-            parallel {
-                stage('Curl http_code') {
-                    steps {
-                        curlTest (namespace, 'http_code')
-                    }
-                }
-                stage('Curl total_time') {
-                    steps {
-                        curlTest (namespace, 'time_total')
-                    }
-                }
-                stage('Curl size_download') {
-                    steps {
-                        curlTest (namespace, 'size_download')
-                    }
-                }
-            }
-        }
-
         stage('Cleanup dev') {
             steps {
                 script {
@@ -273,27 +222,6 @@ pipeline {
                     // Deploy with helm
                     echo "Deploying"
                     helmInstall (namespace, "${ID}")
-                }
-            }
-        }
-
-        // Run the 3 tests on the deployed Kubernetes pod and service
-        stage('Staging tests') {
-            parallel {
-                stage('Curl http_code') {
-                    steps {
-                        curlTest (namespace, 'http_code')
-                    }
-                }
-                stage('Curl total_time') {
-                    steps {
-                        curlTest (namespace, 'time_total')
-                    }
-                }
-                stage('Curl size_download') {
-                    steps {
-                        curlTest (namespace, 'size_download')
-                    }
                 }
             }
         }
