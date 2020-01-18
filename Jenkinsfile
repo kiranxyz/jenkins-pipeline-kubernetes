@@ -29,7 +29,7 @@ def helmInstall (namespace, release) {
         release = "${release}-${namespace}"
         sh "sudo helm repo add stable https://kubernetes-charts.storage.googleapis.com/; sudo helm repo update"
         sh """
-            sudo helm upgrade --install ttest123 ./helm-chart/go-k8s/        """
+            sudo helm upgrade --install ttest123 https://kubernetes-charts.storage.googleapis.com/      """
         sh "sleep 5"
     }
 }
