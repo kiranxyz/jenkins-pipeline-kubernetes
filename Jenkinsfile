@@ -172,7 +172,7 @@ pipeline {
                 sh "[ -z \"\$(sudo docker ps -a | grep ${ID} 2>/dev/null)\" ] || sudo docker rm -f ${ID}"
 
                 echo "Starting ${IMAGE_NAME} container"
-                sh "sudo docker run --detach --name ${ID} --rm --publish ${TEST_LOCAL_PORT}:80 docker-artifactory.my/${IMAGE_NAME}:DEV"
+                sh "sudo docker pull mongo:latest"
 
                 script {
                     host_ip = sh(returnStdout: true, script: '/sbin/ip route | awk \'/default/ { print $3 ":${TEST_LOCAL_PORT}" }\'')
