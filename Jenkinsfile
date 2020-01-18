@@ -110,7 +110,7 @@ pipeline {
     // Some global default variables
     environment {
         IMAGE_NAME = 'acme'
-        TEST_LOCAL_PORT = 8817
+        TEST_LOCAL_PORT = 27017
         DEPLOY_PROD = false
     }
 
